@@ -1,8 +1,8 @@
 table = require("table")
-camera = require("Libraries/camera")
+Camera = require("Libraries/camera")
 vector = require("Libraries/vector")
 tilemap = require("tilemap")
-
+--coderdojo's inferno 
 bullets = {}
 world = {}
 player = {}
@@ -62,8 +62,8 @@ function new_bullet(pos_x,pos_y)
 	local x = player.body:getX()
 	local y = player.body:getY()
 
-	bulletDirection.x = player.body:getX() - love.mouse.getX()
-	bulletDirection.y = player.body:getY() - love.mouse.getY()
+	bulletDirection.x = player.body:getX() - love.mouse.getX() - (love.graphics.getWidth() / 2) + cam.x
+	bulletDirection.y = player.body:getY() - love.mouse.getY() - (love.graphics.getHeight() / 2) + cam.y
 
 	bulletDirection:normalizeInplace()
 	bulletDirection = bulletDirection * -25
@@ -75,6 +75,7 @@ function new_bullet(pos_x,pos_y)
 	o.fixture = love.physics.newFixture(o.body,o.shape)
 
 	setmetatable(o, {__index = bullet_class})
+
 	
 	o.body:setAngle(bulletDirection:angleTo() + 1.5)
 
@@ -94,7 +95,7 @@ function love.load()
 	--no gravity in a top view of the world (the gravity is along the Z axis)
 	world = love.physics.newWorld(0, 0, true)
 
-	cam = camera.new(x,y)
+	cam = Camera(x,y)
 
 	--vector used for bullet computation
 	bulletDirection = vector:new(1,1)
@@ -113,7 +114,7 @@ function love.update(dt)
 		
 	local dx = player.body:getX() - cam.x 
 	local dy = player.body:getY() - cam.y
-	cam:move(dx,dy)
+	
 
 	--standard WASD movement
 	if love.keyboard.isDown("w") then
@@ -145,9 +146,13 @@ function love.update(dt)
 	else
 		shootingTimer = 0
 	end
+
+	cam:move(dx,dy)
 end
 
 function love.draw()
+	cam:attach()
+
 	draw_map()
 
 	--draw all the bullets
@@ -157,4 +162,9 @@ function love.draw()
 	
 	--draw the player
 	player:draw()
+	local mouseX = love.mouse:getX();
+	local mouseY = love.mouse:getY();
+	cam:detach()
+
+	love.graphics.print(bulletDirection.x,0,0)
 end
