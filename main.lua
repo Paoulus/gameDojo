@@ -2,93 +2,19 @@ table = require("table")
 Camera = require("Libraries/camera")
 vector = require("Libraries/vector")
 tilemap = require("tilemap")
+bullet = require("bullet")
+player = require("player")
+
 --coderdojo's inferno 
-bullets = {}
+
 world = {}
-player = {}
 
 bullet_class = {}
 enemy = {}
 
-function player:move(dx,dy)
-	self.body:setX(self.body:getX() + dx)
-	self.body:setY(self.body:getY() + dy)
-end
-
-function player:setPosition(x,y)
-	self.body:setX(x)
-	self.body:setY(y)
-end
-
-function player:draw()
-	love.graphics.draw(self.sprite,self.body:getX(),self.body:getY(),self.body:getAngle(),0.4,0.4)
-end
-
-function player:shootAt(x,y)
-end
-
-
-function bullet_class:draw()
-	love.graphics.draw(self.sprite,self.body:getX(),self.body:getY(),self.body:getAngle(),0.16,0.16)
-end
-
-function enemy:new()
-	local e = {}
-	e.body = love.physics.newBody(world,0,0)
-	e.shape = love.physics.newRectangleShape(4,4)
-	e.fixture = love.physics.newFixture(e.body,e.fixture)
-	e.sprite = love.graphics.newImage("Textures/enemy.png")
-
-	setmetatable(e,self)
-end
-
-function enemy:move(dx,dy)
-	e.body.setX(self.body:getX() + dx)
-	e.body.setY(self.body:getY() + dy)
-end
-
-function enemy:setPosition(x,y)
-	e.body.setX(x)
-	e.body.setY(y)
-end
-
-function enemy:draw()
-	love.graphics.draw(self.sprite,self.body:getX(),self.body:getY(),self.body:getAngle(),0.4,0.4)
-end
-
-function new_bullet(pos_x,pos_y)
-	local o = {};
-
-	local x = player.body:getX()
-	local y = player.body:getY()
-
-	bulletDirection.x = player.body:getX() - love.mouse.getX() - (love.graphics.getWidth() / 2) + cam.x
-	bulletDirection.y = player.body:getY() - love.mouse.getY() - (love.graphics.getHeight() / 2) + cam.y
-
-	bulletDirection:normalizeInplace()
-	bulletDirection = bulletDirection * -25
-
-	--initialization
-	o.body = love.physics.newBody(world,x + 50,y + 50,"dynamic")
-	o.sprite = love.graphics.newImage("Textures/bullet_sprite.png")
-	o.shape = love.physics.newRectangleShape(1,3)
-	o.fixture = love.physics.newFixture(o.body,o.shape)
-
-	setmetatable(o, {__index = bullet_class})
-
-	
-	o.body:setAngle(bulletDirection:angleTo() + 1.5)
-
-
-	--change this later 
-	o.body:applyLinearImpulse(bulletDirection.x,bulletDirection.y)
-
-	return o;
-end
-
 function love.load()
 	speed = 300;
-
+	bullets = {}
 	shootingTimer = 0;
 	timeBetweenShots = 0.4
 	
@@ -100,13 +26,7 @@ function love.load()
 	--vector used for bullet computation
 	bulletDirection = vector:new(1,1)
 
-
-	player.sprite = love.graphics.newImage("Textures/CompletedBlueGuy.png")
-	player.body = love.physics.newBody(world,0,0,"kinematic")
-	player.shape = love.physics.newRectangleShape(10,10)
-	player.fixture = love.physics.newFixture(player.body,player.shape)
-
-	player:setPosition(0,0)
+	p = player:new(world)
 end
 
 function love.update(dt)
@@ -134,12 +54,12 @@ function love.update(dt)
 	if love.mouse.isDown(1) then
 			--spawn bullet amd insert it in the table of all bullets
 		if shootingTimer == 0 then
-			table.insert(bullets,new_bullet(x,y))
+			table.insert(bullets,bullet:new(player.body:getX(),player.body:getY()))
 			shootingTimer = shootingTimer + love.timer.getDelta()
 		else
 			shootingTimer = shootingTimer + love.timer.getDelta()
 			if(shootingTimer > timeBetweenShots) then
-				table.insert(bullets,new_bullet(x,y))
+				table.insert(bullets,bullet:new(player.body:getX(),player.body:getY()))
 				shootingTimer = 0
 			end
 		end
@@ -165,6 +85,4 @@ function love.draw()
 	local mouseX = love.mouse:getX();
 	local mouseY = love.mouse:getY();
 	cam:detach()
-
-	love.graphics.print(bulletDirection.x,0,0)
 end
